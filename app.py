@@ -4,6 +4,28 @@ from mailer_logic import SaaSMailer
 
 st.set_page_config(layout="wide", page_title="배송지연 안내 발송기")
 
+def safe_read_csv(file, file_description="파일"):
+    """Safely read CSV with multiple encoding attempts"""
+    encodings = ['utf-8-sig', 'cp949', 'euc-kr', 'latin1', 'utf-8']
+    
+    for i, encoding in enumerate(encodings):
+        try:
+            file.seek(0)
+            df = pd.read_csv(file, encoding=encoding)
+            if i > 0:  # If not the first encoding
+                st.info(f"ℹ️ {file_description}을(를) {encoding} 인코딩으로 읽었습니다.")
+            return df
+        except UnicodeDecodeError:
+            if i == len(encodings) - 1:  # Last attempt
+                st.error(f"❌ {file_description} 인코딩 오류. 파일을 UTF-8로 저장하여 다시 시도해주세요.")
+                raise
+            continue
+        except Exception as e:
+            st.error(f"❌ {file_description} 읽기 오류: {str(e)}")
+            raise
+    
+    return None
+
 def main():
     st.title("📮 배송지연 안내 메일 자동 발송기")
     
@@ -66,10 +88,11 @@ def main():
         if st.button("🔍 데이터 분석 및 메일 생성", type="primary"):
             try:
                 # Load Data
-                data_df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
-                
+
+                data_df = safe_read_csv(uploaded_file, "주문/배송 데이터")
+
                 if mail_list_file.name.endswith('.csv'):
-                    mail_list_df = pd.read_csv(mail_list_file, encoding='utf-8-sig')
+                    mail_list_df = safe_read_csv(mail_list_file, "협력사 메일 리스트")
                 else:
                     mail_list_df = pd.read_excel(mail_list_file)
                 
