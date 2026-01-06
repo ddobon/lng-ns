@@ -25,7 +25,7 @@ class SaaSMailer:
         filtered_df = self.df[self.df['배송지연 분류'].isna() | (self.df['배송지연 분류'] == '')].copy()
         
         required_columns = [
-            '협력사 코드', '협력사명', '상품코드', '상품명', 
+            '협력사코드', '협력사명', '상품코드', '상품명', 
             '단품명', '주문번호', '운송장번호'
         ]
         
@@ -48,7 +48,7 @@ class SaaSMailer:
         mail_items = []
         
         for partner_name, group_df in grouped:
-            partner_code = group_df.iloc[0]['협력사 코드']
+            partner_code = group_df.iloc[0]['협력사코드']
             
             # Create content
             mail_content = self.create_mail_content(partner_name, group_df)
@@ -87,7 +87,7 @@ class SaaSMailer:
     def get_partner_email(self, partner_name, partner_code):
         # Case insensitive search could be added here if needed
         # Ensuring column names match what we expect from mail_list
-        # The user provided mail_list has '협력사명', '협력사 코드', '이메일'
+        # The user provided mail_list has '협력사명', '협력사코드', '영업담당자E-MAIL'
         
         result = self.mail_list[self.mail_list['협력사명'] == partner_name]
         if result.empty and partner_code:
@@ -97,12 +97,12 @@ class SaaSMailer:
             
             # Create a localized copy for safe type casting
             temp_mail_list = self.mail_list.copy()
-            temp_mail_list['협력사 코드'] = temp_mail_list['협력사 코드'].astype(str).str.split('.').str[0]
+            temp_mail_list['협력사코드'] = temp_mail_list['협력사코드'].astype(str).str.split('.').str[0]
             
-            result = temp_mail_list[temp_mail_list['협력사 코드'] == p_code_str]
+            result = temp_mail_list[temp_mail_list['협력사코드'] == p_code_str]
 
         if not result.empty:
-            return result.iloc[0]['이메일']
+            return result.iloc[0]['영업담당자E-MAIL']
         return None
 
     def markdown_to_html(self, markdown_text):
